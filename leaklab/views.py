@@ -173,6 +173,38 @@ hr{ border:0; border-top:1px solid var(--line); margin:.55rem 0; }
   border:1px solid var(--line); border-bottom-width:2px; border-radius:3px; padding:0 .3rem; }
 .ll-note{ display:flex; align-items:center; gap:.4rem; font-size:.78rem; color:var(--muted);
   padding:.35rem 0; }
+.ll-hero{ border:1px solid var(--line); border-left:4px solid var(--accent); background:#f7f8fa;
+  border-radius:7px; padding:.85rem 1rem; margin:.35rem 0 .7rem; }
+.ll-hero-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+.ll-hero-title{ font-size:1.08rem; font-weight:650; color:var(--ink); letter-spacing:-.01em; }
+.ll-hero-body{ max-width:70rem; font-size:.82rem; color:var(--sub); line-height:1.45; margin-top:.25rem; }
+.ll-state{ flex:0 0 auto; border:1px solid var(--line); border-radius:999px; padding:.22rem .55rem;
+  font-size:.66rem; font-weight:650; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); background:#fff; }
+.ll-flow{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; background:var(--line);
+  border:1px solid var(--line); border-radius:7px; overflow:hidden; margin:.35rem 0 .8rem; }
+.ll-flow-step{ background:#fff; padding:.58rem .7rem; min-height:4.1rem; }
+.ll-flow-step strong{ display:block; font-size:.72rem; color:var(--ink); font-weight:600; }
+.ll-flow-step span{ display:block; font-size:.68rem; color:var(--muted); line-height:1.35; margin-top:.18rem; }
+.ll-flow-step.is-done strong{ color:#1f6b4a; }
+.ll-flow-step.is-next{ background:#f7f8fa; }
+.ll-action-row{ display:grid; grid-template-columns:minmax(0,2.2fr) minmax(8rem,1fr) auto; align-items:center;
+  gap:.6rem; border-top:1px solid var(--line); padding:.55rem 0; }
+.ll-action-row:first-of-type{ border-top:0; }
+.ll-action-title{ font-size:.78rem; color:var(--ink); font-weight:550; }
+.ll-action-meta{ font-size:.68rem; color:var(--muted); margin-top:.12rem; white-space:normal; }
+.ll-leak-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.7rem; margin:.35rem 0 .8rem; }
+.ll-leak-card{ border:1px solid var(--line); border-top:3px solid var(--accent); border-radius:6px; background:#fff; padding:.75rem .8rem; min-height:10rem; }
+.ll-leak-card.high{ border-top-color:#9c2f2f; }
+.ll-leak-card.medium{ border-top-color:#8a6412; }
+.ll-leak-card.low{ border-top-color:#33566f; }
+.ll-leak-card-head{ display:flex; justify-content:space-between; gap:.6rem; align-items:flex-start; }
+.ll-leak-title{ font-size:.92rem; line-height:1.2; font-weight:650; color:var(--ink); }
+.ll-leak-priority{ font-size:.64rem; font-weight:650; text-transform:uppercase; letter-spacing:.04em; color:var(--sub); white-space:nowrap; }
+.ll-leak-impact{ font-size:1.18rem; font-weight:650; color:var(--ink); margin-top:.6rem; }
+.ll-leak-copy{ font-size:.75rem; color:var(--sub); line-height:1.4; margin-top:.18rem; }
+.ll-leak-action{ border-top:1px solid var(--line); margin-top:.65rem; padding-top:.5rem; font-size:.74rem; color:var(--ink); line-height:1.35; }
+@media (max-width:760px){ .ll-flow{ grid-template-columns:repeat(2,minmax(0,1fr)); } .ll-hero-head{ flex-direction:column; }
+  .ll-action-row{ grid-template-columns:1fr; gap:.3rem; } }
 .ll-bar{ height:5px; background:var(--soft); border-radius:3px; overflow:hidden; margin:.35rem 0 .3rem; }
 .ll-bar > i{ display:block; height:100%; background:var(--accent); }
 .ll-parts{ font-size:.75rem; color:var(--sub); line-height:1.55; }
@@ -215,7 +247,7 @@ def brand() -> None:
         "</svg>"
     )
     st.sidebar.markdown(
-        f'<div class="ll-brand">{mark}<span>LeakLens<small>Leakage decision system · Round 2</small></span></div>',
+        f'<div class="ll-brand">{mark}<span>LeakLabs<small>Find the leak · fix the leak · check the result</small></span></div>',
         unsafe_allow_html=True,
     )
 
@@ -323,7 +355,7 @@ def kpi_strip(metrics: dict[str, Metric], alerts: list[Alert]) -> None:
             f'<div class="ll-kpi-s">{_esc(sub)}</div></div>'
         )
     cells.append(
-        f'<div class="ll-kpi" title="Deterministic rules that crossed their threshold.">'
+        f'<div class="ll-kpi" title="Rule-based checks that crossed their limit.">'
         f'<div class="ll-kpi-l">Leaks flagged</div>'
         f'<div class="ll-kpi-v">{len(alerts)} of up to 3</div>'
         f'<div class="ll-kpi-s">ranked by evidence strength</div></div>'
@@ -348,7 +380,7 @@ def alert_grid(alerts: list[Alert]) -> int | None:
             "Leak": a.title,
             "Severity": a.severity,
             "Scope": a.scope,
-            "Rate vs threshold": f"{rate} vs {thr}",
+            "Rate vs limit": f"{rate} vs {thr}",
             "Impact": (f"{format_inr(a.impact_value)} · {a.impact_basis}"
                        if a.impact_value is not None else "—"),
             "Score": int(a.evidence_score),
@@ -362,7 +394,7 @@ def alert_grid(alerts: list[Alert]) -> int | None:
             "Leak": st.column_config.TextColumn("Leak", width="medium"),
             "Severity": st.column_config.TextColumn("Severity", width="small"),
             "Scope": st.column_config.TextColumn("Scope", width="large"),
-            "Rate vs threshold": st.column_config.TextColumn("Rate vs threshold", width="medium"),
+            "Rate vs limit": st.column_config.TextColumn("Rate vs limit", width="medium"),
             "Impact": st.column_config.TextColumn("Impact", width="medium"),
             "Score": st.column_config.ProgressColumn("Score", min_value=0, max_value=100,
                                                      format="%d", width="small"),
@@ -376,10 +408,10 @@ def alert_grid(alerts: list[Alert]) -> int | None:
 
 
 def render_monitored(statuses: list[RuleStatus]) -> None:
-    with st.expander("Monitored rules — did not cross threshold", expanded=False):
+    with st.expander("Monitored checks — no warning found", expanded=False):
         df = pd.DataFrame([{"Rule": s.title, "Status": s.status, "Detail": s.detail} for s in statuses])
         st.dataframe(df, hide_index=True, width="stretch")
-        st.caption("These rules ran against the data and found nothing above their threshold. "
+        st.caption("These checks ran against the data and found nothing above their limit. "
                    "Shown so the absence of a leak is explicit, not silent.")
 
 
@@ -423,7 +455,7 @@ def render_trend(alert: Alert) -> None:
                       .encode(x=alt.X("period:N", sort=None), y=alt.Y("threshold:Q")))
     st.altair_chart(_styled(alt.layer(*layers).properties(height=210)), width="stretch")
     if "threshold" in t.columns and t["threshold"].notna().any():
-        st.caption(f"Dashed line = rule threshold ({_fmt_rate(alert.threshold)}).")
+        st.caption(f"Dashed line = rule limit ({_fmt_rate(alert.threshold)}).")
 
 
 def render_bars(alert: Alert) -> None:
@@ -467,12 +499,12 @@ def render_investigation(alert: Alert) -> None:
     )
 
     _field_grid([
-        ("Rule", alert.rule_text),
+        ("Check", alert.rule_text),
         ("Scope", alert.scope),
-        ("Comparison window", alert.comparison_window),
-        ("Numerator", alert.numerator),
-        ("Denominator", alert.denominator),
-        ("Baseline", alert.baseline_note),
+        ("Time period", alert.comparison_window),
+        ("Counted amount", alert.numerator),
+        ("Compared with", alert.denominator),
+        ("Starting point", alert.baseline_note),
     ])
 
     left, right = st.columns([2, 1], gap="large")
@@ -480,7 +512,7 @@ def render_investigation(alert: Alert) -> None:
     with left:
         section("Trend", "trend")
         render_trend(alert)
-        section("Ranked breakdown — likely drivers", "bars")
+        section("Breakdown — likely reasons", "bars")
         render_bars(alert)
         if alert.tables:
             section("Supporting breakdowns", "layers")
@@ -497,7 +529,7 @@ def render_investigation(alert: Alert) -> None:
             unsafe_allow_html=True,
         )
 
-        section("Impact treatment", "shield")
+        section("How value is counted", "shield")
         st.markdown(
             f'<div>{_basis_badge(alert.impact_basis)}</div>'
             f'<div class="ll-impact">{_esc(format_inr(alert.impact_value))}</div>'
@@ -505,7 +537,7 @@ def render_investigation(alert: Alert) -> None:
             unsafe_allow_html=True,
         )
 
-        section("Evidence strength", "activity")
+        section("Confidence in this warning", "activity")
         pct = max(0, min(100, int(alert.evidence_score)))
         st.markdown(
             f'<div class="ll-meta-line">{pct} / 100</div>'
@@ -641,7 +673,7 @@ def render_method(model, metrics: dict[str, Metric]) -> None:
 
 
 # =========================================================================== #
-# ROUND 2 — LeakLens screens
+# ROUND 2 — LeakLabs screens
 # =========================================================================== #
 # Palette additions for the decision layer.
 OBS = "#22374f"          # observed realisation
@@ -651,7 +683,10 @@ TIER_COLOR = {"Review now": SEV["High"], "Watch": SEV["Medium"], "Routine": MUTE
 
 def _pct(v) -> str:
     try:
-        return f"{float(v) * 100:.1f}%"
+        value = float(v)
+        if pd.isna(value):
+            return "—"
+        return f"{value * 100:.1f}%"
     except (TypeError, ValueError):
         return "—"
 
@@ -691,6 +726,143 @@ def _plain(text: str) -> str:
     return html.escape(str(text), quote=False)
 
 
+def _business_action_copy(text: str) -> str:
+    """Use business wording for action-library text without changing stored values."""
+    return (str(text)
+            .replace("Priority queue (model)", "Priority queue")
+            .replace("highest-exposure open orders",
+                     "open orders with the largest estimated amount at risk")
+            .replace("Observed adverse rate", "Verified cancellation/return rate")
+            .replace("Adverse rate", "Cancellation/return rate")
+            .replace("adverse rate", "cancellation/return rate")
+            .replace("population base rate", "overall starting rate"))
+
+
+def render_command_center(files: dict, mode_label: str, ft: pd.DataFrame,
+                          res, summary, alerts: list[Alert], log_df: pd.DataFrame) -> None:
+    """Render the manager's first-glance decision brief above the six screens.
+
+    This is intentionally compact: the tabs still contain the full evidence, but
+    the first viewport now answers the hackathon judge's three questions quickly:
+    can I trust the data, what should I do first, and is the action being tracked?
+    """
+    from .actions import log_summary
+
+    labelled = int(ft["eligible"].sum()) if ft is not None and "eligible" in ft else 0
+    action_stats = log_summary(log_df)
+    if res is None:
+        state = "Review list not ready"
+        title = "Start with a simple review list"
+        body = ("The files are loaded and checked. Run the detailed checks to see which orders need "
+                "attention first; the same results will be used on every later screen.")
+        next_step = "Next: run the checks"
+    elif res.audit.get("usable"):
+        state = "Review list ready"
+        title = "A reliable review list is ready"
+        body = ("The detailed checks found a useful pattern. Use the list to spend limited review time "
+                "on the orders with the largest estimated amount at risk, then log the action.")
+        next_step = "Next: review the queue"
+    else:
+        state = "No clear pattern · value-led"
+        title = "No clear pattern — start with verified value"
+        body = ("The data cannot reliably tell us which orders will have a problem. LeakLabs stays useful "
+                "by starting with order value, keeping verified warnings visible, and recording the data "
+                "needed for a better next run.")
+        next_step = "Next: review the value-led queue"
+
+    observed = format_inr(summary.observed_leak_value) if summary is not None else "—"
+    exposure = format_inr(summary.expected_exposure) if summary is not None else "—"
+    queue_sub = (f"{summary.flagged:,} flagged · {len(alerts):,} verified warnings"
+                 if summary is not None else f"{len(alerts):,} verified warnings · run analysis to create queue")
+    action_sub = f"{action_stats['open']:,} open · {action_stats['total']:,} total"
+
+    st.markdown(
+        f'<div class="ll-hero"><div class="ll-hero-head">'
+        f'<div><div class="ll-hero-title">Quick look</div>'
+        f'<div class="ll-hero-body">{_esc(title)} — {_esc(body)}</div></div>'
+        f'<span class="ll-state">{_esc(state)}</span></div></div>',
+        unsafe_allow_html=True,
+    )
+    kpi_row([
+        ("Data scope", f"{len(files):,} files", mode_label or "loaded"),
+        ("Records with verified outcomes", f"{labelled:,}", "ready for comparison"),
+        ("Verified leak value", observed, "status-verified"),
+        ("Estimated amount at risk", exposure, "order value × estimated likelihood"),
+        ("Action tracking", f"{action_stats['total']:,}", action_sub),
+    ])
+    st.markdown(
+        '<div class="ll-flow">'
+        f'<div class="ll-flow-step is-done"><strong>1 · Trust the data</strong><span>{len(files):,} files · mapping and joins visible</span></div>'
+        f'<div class="ll-flow-step {"is-done" if res is not None else "is-next"}"><strong>2 · Build &amp; check</strong><span>{"quality check complete" if res is not None else "awaiting analysis"}</span></div>'
+        f'<div class="ll-flow-step {"is-done" if summary is not None else "is-next"}"><strong>3 · Prioritize</strong><span>{_esc(queue_sub)}</span></div>'
+        f'<div class="ll-flow-step {"is-done" if action_stats["total"] else "is-next"}"><strong>4 · Act &amp; measure</strong><span>{_esc(next_step)} · {_esc(action_sub)}</span></div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _friendly_leak_title(alert: Alert) -> str:
+    """Short labels for the non-technical dashboard."""
+    names = {
+        "Return / refund leakage": "Too many returns",
+        "Elevated cancellation on specific products": "Too many cancellations",
+        "Low stock against reorder point": "Stock is running low",
+        "Discount erosion": "Discounts may be too high",
+        "Revenue anomaly": "Sales dropped suddenly",
+    }
+    return names.get(alert.title, alert.title)
+
+
+def render_simple_dashboard(metrics: dict[str, Metric], alerts: list[Alert], statuses: list[RuleStatus],
+                            summary=None, res=None, log_df: pd.DataFrame | None = None) -> None:
+    """Show only the business answer: where the leak is and what to do next."""
+    section("Where is money leaking?", "alert")
+    st.caption("This page is for day-to-day decisions. Technical analysis and model details are kept under "
+               "Technical details (ML).")
+
+    def value(key: str, fallback: str = "Unavailable") -> str:
+        metric = metrics.get(key)
+        return metric.display if metric is not None else fallback
+
+    kpi_row([
+        ("Completed sales", value("realized_revenue"), "verified"),
+        ("Money lost to returns", value("returned_value"), "verified"),
+        ("Money lost to cancellations", value("cancelled_value"), "verified"),
+        ("Products running low", value("low_stock_count"), "verified count"),
+    ])
+
+    if not alerts:
+        banner("ok", "No clear warning found", "The checks ran, but none of the current warning limits were crossed.")
+    else:
+        st.markdown('<div class="ll-leak-grid">', unsafe_allow_html=True)
+        for alert in alerts[:3]:
+            severity = str(alert.severity).lower()
+            impact = format_inr(alert.impact_value) if alert.impact_value is not None else "Unavailable"
+            basis = "Verified" if alert.impact_basis == "Observed" else alert.impact_basis
+            st.markdown(
+                f'<div class="ll-leak-card {"high" if severity == "high" else "medium" if severity == "medium" else "low"}">'
+                f'<div class="ll-leak-card-head"><div class="ll-leak-title">{_esc(_friendly_leak_title(alert))}</div>'
+                f'<div class="ll-leak-priority">{_esc(severity.title())} priority</div></div>'
+                f'<div class="ll-leak-impact">{_esc(impact)}</div>'
+                f'<div class="ll-leak-copy">{_esc(basis)} · {_esc(alert.scope)}</div>'
+                f'<div class="ll-leak-action"><b>What to do:</b> {_esc(_business_action_copy(alert.action))}</div>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    if summary is None:
+        banner("warn", "Order review list not ready", "Open Technical details (ML) and choose <b>Run analysis</b> "
+               "to create a list of orders to check first.")
+    else:
+        open_actions = 0
+        if log_df is not None and len(log_df):
+            open_actions = int((log_df["status"].astype(str).str.lower() != "done").sum())
+        banner("ok", "What to do next", f"Check the {summary.flagged:,} highest-priority orders first, then record "
+               f"the action. {open_actions:,} action(s) are still open." if open_actions else
+               f"Check the {summary.flagged:,} highest-priority orders first, then record the action.")
+
+
 # --------------------------------------------------------------------------- #
 # Charts
 # --------------------------------------------------------------------------- #
@@ -705,9 +877,9 @@ def chart_exposure_time(df: pd.DataFrame) -> None:
         return
     long = df.melt(id_vars=["period"], value_vars=["observed_value", "expected_exposure"],
                    var_name="series", value_name="value")
-    label = {"observed_value": "Observed leak value", "expected_exposure": "Estimated exposure"}
+    label = {"observed_value": "Verified leak value", "expected_exposure": "Estimated amount at risk"}
     long["series"] = long["series"].map(label)
-    color = alt.Scale(domain=["Observed leak value", "Estimated exposure"], range=[OBS, EST])
+    color = alt.Scale(domain=["Verified leak value", "Estimated amount at risk"], range=[OBS, EST])
     bars = alt.Chart(long).mark_bar(size=14).encode(
         x=alt.X("period:N", title=None, sort=None),
         y=alt.Y("value:Q", title="₹ value"),
@@ -719,8 +891,9 @@ def chart_exposure_time(df: pd.DataFrame) -> None:
                  alt.Tooltip("value:Q", title="Value", format=",.0f")],
     ).properties(height=220)
     st.altair_chart(_base(bars), width="stretch")
-    st.caption("Observed leak value is realised (status-verified). Estimated exposure is "
-               "line value × predicted risk — a forward scenario, not revenue.")
+    st.caption("Verified leak value is realised (status-verified). Estimated amount at risk is "
+               "order value × estimated likelihood of a cancellation or return — a forward "
+               "scenario, not revenue.")
 
 
 def chart_segment_bars(df: pd.DataFrame, dim: str, metric: str = "expected_exposure") -> None:
@@ -731,10 +904,10 @@ def chart_segment_bars(df: pd.DataFrame, dim: str, metric: str = "expected_expos
     d = df.copy()
     is_money = metric in {"expected_exposure", "observed_value"}
     fmt = ",.0f" if is_money else ".1%"
-    title = {"expected_exposure": "Estimated exposure (₹)",
-             "observed_value": "Observed leak value (₹)",
-             "observed_rate": "Observed adverse rate",
-             "mean_risk": "Mean predicted risk"}.get(metric, metric)
+    title = {"expected_exposure": "Estimated amount at risk (₹)",
+             "observed_value": "Verified leak value (₹)",
+             "observed_rate": "Verified cancellation/return rate",
+             "mean_risk": "Average estimated likelihood"}.get(metric, metric)
     d = d.sort_values(metric, ascending=False).head(12)
     chart = alt.Chart(d).mark_bar(color=CHART, size=14).encode(
         y=alt.Y(f"{dim}:N", sort="-x", title=None,
@@ -833,57 +1006,58 @@ def render_data_trust(files, profiles, mapping, model, ft, specs, grain, warning
     } for name, p in profiles.items()]
     st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
-    section("Base grain & join health", "shield")
+    section("Order-level data and file matching", "shield")
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Base grain", grain["grain"])
+    c1.metric("Order level", grain["grain"])
     c2.metric("Rows", f"{grain['rows']:,}")
-    c3.metric("Joins preserved grain", "Yes" if grain["joins_preserved"] else "No")
-    c4.metric("Max unmatched", _pct(grain["max_unmatched_pct"]))
+    c3.metric("File matching kept orders", "Yes" if grain["joins_preserved"] else "No")
+    c4.metric("Unmatched rows", _pct(grain["max_unmatched_pct"]))
     if model.join_health:
         st.dataframe(pd.DataFrame([j.as_row() for j in model.join_health]),
                      width="stretch", hide_index=True)
     if grain.get("grain_note"):
         st.caption(grain["grain_note"])
 
-    section("Field mapping — name hint + type validation", "layers")
-    map_rows = [{"File": f, "Concept": c, "Column": col}
+    section("How columns were matched", "layers")
+    map_rows = [{"File": f, "Business meaning": c, "Column": col}
                 for f, m in mapping.by_file.items() for c, col in m.items() if col is not None]
     st.dataframe(pd.DataFrame(map_rows), width="stretch", hide_index=True)
     for w in warnings:
         st.warning(w)
 
-    section("Modelling eligibility — the label and the leak guards", "check")
+    section("Usable outcomes and safe inputs", "check")
     elig = int(ft["eligible"].sum())
     known = ft["target_known"].astype(bool)
     adverse = int((ft["target"] == 1).sum())
     cells = [
         ("Rows with a verified outcome", f"{elig:,}", "terminal status only"),
         ("Excluded (unverified)", f"{len(ft) - elig:,}", "e.g. pending — outcome unknown"),
-        ("Adverse outcomes", f"{adverse:,}", "cancelled + returned"),
-        ("Base adverse rate", _pct(adverse / elig if elig else float('nan')), "observed"),
+        ("Cancellation/return outcomes", f"{adverse:,}", "cancelled + returned"),
+        ("Verified cancellation/return rate", _pct(adverse / elig if elig else float('nan')), "observed"),
     ]
     kpi_row(cells)
     st.markdown(
-        f'<div class="ll-meta-line"><b>Target:</b> {_esc(specs_target_label(ft))}'
-        '<br><b>Leakage guard:</b> only pre-outcome fields become features; the verified status '
-        'field is used <i>only</i> to build the label.</div>', unsafe_allow_html=True)
+        f'<div class="ll-meta-line"><b>Outcome definition:</b> {_esc(specs_target_label(ft))}'
+        '<br><b>Timing check:</b> only information available before the outcome is used for '
+        'prioritization; the verified status field is used <i>only</i> to define the outcome.</div>',
+        unsafe_allow_html=True)
 
-    section("Pre-outcome features in the model", "bars")
+    section("Information available before the outcome", "bars")
     feats = pd.DataFrame([{
-        "Feature": s.label, "Column": s.name, "Type": s.kind,
-        "Source": s.source or "derived", "Leakage-safe": "yes" if s.pre_outcome else "NO",
+        "Input": s.label, "Column": s.name, "Type": s.kind,
+        "Source": s.source or "derived", "Available in advance": "yes" if s.pre_outcome else "NO",
         "Note": s.note,
     } for s in specs])
     st.dataframe(feats, width="stretch", hide_index=True)
 
-    with st.expander("Excluded by design (post-outcome / identifiers)"):
+    with st.expander("Not used: after-the-fact fields and identifiers"):
         for f in EXCLUDED_FIELDS:
             st.markdown(f"- {f}")
 
 
 def specs_target_label(ft: pd.DataFrame) -> str:
     vals = sorted(ft.loc[ft["eligible"], "status_raw"].dropna().astype(str).unique().tolist())
-    return ("cancelled or returned (1) vs completed (0). Eligible statuses: " + ", ".join(vals))
+    return ("cancelled or returned (1) vs completed (0). Included statuses: " + ", ".join(vals))
 
 
 # --------------------------------------------------------------------------- #
@@ -895,12 +1069,12 @@ def render_train(res, *, capacity: float, kind: str, train_button: bool = True) 
     c1, c2 = st.columns([3, 1])
     with c2:
         if train_button:
-            clicked = st.button("Train model", type="primary", width="stretch",
-                                help="Fit the baseline and final models on the provided data.")
+            clicked = st.button("Run analysis", type="primary", width="stretch",
+                                help="Run the detailed checks and build the order review list.")
     if res is None:
         with c1:
             banner("warn", "No model yet",
-                   "Click <b>Train model</b> to fit a baseline and a final model on the loaded data. "
+                   "Click <b>Run analysis</b> to check the data and build the order review list. "
                    "Training runs locally — no external API.")
         return clicked
 
@@ -948,7 +1122,7 @@ def render_train(res, *, capacity: float, kind: str, train_button: bool = True) 
     for k, lab in keys:
         mrows.append({"Metric": lab,
                       "Baseline (LogReg)": round(res.baseline.get(k, float("nan")), 4),
-                      "Final (RF)": round(res.final.get(k, float("nan")), 4)})
+                      f"Final ({res.final_kind.upper()})": round(res.final.get(k, float("nan")), 4)})
     st.dataframe(pd.DataFrame(mrows), width="stretch", hide_index=True)
     st.caption("At the chosen operating point. The baseline is the interpretation floor: a final "
                "model must beat it to be worth the added complexity. Here it does not — reported honestly.")
@@ -997,56 +1171,133 @@ def render_train(res, *, capacity: float, kind: str, train_button: bool = True) 
 # --------------------------------------------------------------------------- #
 def render_queue(summary, scored: pd.DataFrame, seg: pd.DataFrame, dim: str,
                  alerts: list[Alert], statuses: list[RuleStatus]) -> int | None:
-    """KPI strip + queue table + segment bars + verified rule signals."""
+    """KPI strip + queue table + segment bars + verified rule signals.
+
+    The table is intentionally capped for a dense, responsive manager view, but
+    filters are applied before that cap so a record can still be found outside
+    the default top slice.  ``source_indices`` keeps the selected row tied to
+    the positional index used by the investigation screen.
+    """
     kpi_row([
-        ("Records scored", f"{summary.population:,}", "all grain rows"),
-        ("Flagged for review", f"{summary.flagged:,}", f"top {_pct(summary.capacity)} by risk"),
-        ("Observed leak value", format_inr(summary.observed_leak_value), "Observed · verified"),
-        ("Estimated exposure", format_inr(summary.expected_exposure), "Estimated · forward"),
-        ("Base adverse rate", _pct(summary.base_rate), "observed"),
+        ("Orders checked", f"{summary.population:,}", "all order rows"),
+        ("Orders to check first", f"{summary.flagged:,}", f"top {_pct(summary.capacity)} by priority"),
+        ("Verified leak value", format_inr(summary.observed_leak_value), "Observed · verified"),
+        ("Estimated amount at risk", format_inr(summary.expected_exposure), "Estimated · forward"),
+        ("Problem rate", _pct(summary.base_rate), "verified cancellations/returns"),
     ])
 
-    section("Verified deterministic signals (Round 1 rules)", "alert")
+    section("Verified warning signs", "alert")
     if alerts:
         df = pd.DataFrame([{
             "#": a.rank, "Leak": a.title, "Severity": a.severity, "Scope": a.scope,
-            "Rate vs threshold": (f"{_fmt_rate(a.rate)} vs {_fmt_rate(a.threshold)}"
-                                  if a.rate is not None else "count rule"),
+            "Rate vs limit": (f"{_fmt_rate(a.rate)} vs {_fmt_rate(a.threshold)}"
+                              if a.rate is not None else "count rule"),
             "Impact": (f"{format_inr(a.impact_value)} · {a.impact_basis}"
                        if a.impact_value is not None else "—"),
             "Score": int(a.evidence_score),
         } for a in alerts])
         st.dataframe(df, width="stretch", hide_index=True)
     else:
-        note("No deterministic rule crossed its threshold in this window.")
-    with st.expander("Monitored rules — did not cross threshold"):
+        note("No rule-based warning crossed its limit in this window.")
+    with st.expander("Monitored checks — no warning found"):
         st.dataframe(pd.DataFrame([{"Rule": s.title, "Status": s.status, "Detail": s.detail}
                                    for s in statuses]), width="stretch", hide_index=True)
 
-    section("Priority queue — ranked by expected exposure (Estimated)", "bars")
-    show = scored.head(400).copy()
+    section("Orders to check first", "bars")
+    if scored is None or scored.empty:
+        note("No ranked records are available for review yet.")
+        return None
+
+    # Keep the source frame's index until selection has been resolved.  The
+    # scorer currently uses a RangeIndex, and preserving it here also keeps the
+    # contract safe if the visible frame is later sorted or reset.
+    queue = scored.copy()
+    filter_cols = [c for c in ["record_id", "status", "tier", dim] if c in queue.columns]
+
+    tier_values = (set(queue["tier"].dropna().astype(str))
+                   if "tier" in queue.columns else set())
+    tier_options = [tier for tier in ("Review now", "Watch", "Routine")
+                    if tier in tier_values]
+    tier_options.extend(sorted(tier_values - set(tier_options)))
+    status_options = (
+        sorted(queue["status"].dropna().astype(str).unique().tolist())
+        if "status" in queue.columns else []
+    )
+    driver_options = (
+        sorted(queue[dim].dropna().astype(str).unique().tolist())
+        if dim in queue.columns else []
+    )
+
+    search_col, tier_col, status_col, driver_col = st.columns([2, 1, 1, 1.5], gap="small")
+    with search_col:
+        query = st.text_input("Search record or segment", key="queue_search",
+                              placeholder="Record ID, status, or segment value")
+    with tier_col:
+        selected_tiers = st.multiselect("Priority level", tier_options, key="queue_tiers")
+    with status_col:
+        selected_statuses = st.multiselect("Status", status_options, key="queue_statuses")
+    with driver_col:
+        driver_label = dim.replace("_", " ").title() if dim else "Segment"
+        selected_drivers = st.multiselect(f"Filter by {driver_label}", driver_options,
+                                          key=f"queue_drivers_{dim}") if driver_options else []
+
+    mask = pd.Series(True, index=queue.index)
+    if selected_tiers and "tier" in queue.columns:
+        mask &= queue["tier"].astype("string").isin(selected_tiers)
+    if selected_statuses and "status" in queue.columns:
+        mask &= queue["status"].astype("string").isin(selected_statuses)
+    if selected_drivers and dim in queue.columns:
+        mask &= queue[dim].astype("string").isin(selected_drivers)
+    if query.strip():
+        searchable = queue[filter_cols].fillna("").astype(str).agg(" ".join, axis=1)
+        mask &= searchable.str.contains(query.strip(), case=False, regex=False, na=False)
+
+    filtered = queue.loc[mask]
+    show = filtered.head(400).copy()
+    source_indices = list(show.index)
+    if not len(show):
+        if query.strip() or selected_tiers or selected_statuses or selected_drivers:
+            criteria = "clear one or more filters"
+        else:
+            criteria = "check the scoring inputs"
+        note(f"No queue records match the current controls — {criteria} to continue.")
+        return None
+
     cols = ["record_id", "date", "status", "tier", "value", "risk", "expected_exposure", dim]
     cols = [c for c in cols if c in show.columns]
     show = show[cols].rename(columns={
         "record_id": "Record", "date": "Date", "status": "Status", "tier": "Tier",
-        "value": "Order value (₹)", "risk": "Risk", "expected_exposure": "Expected exposure (₹)",
+        "value": "Order value (₹)", "risk": "Priority", "expected_exposure": "Estimated amount at risk (₹)",
     })
+    filter_note = (f"Showing {len(show):,} of {len(filtered):,} matching records"
+                   f" · {len(queue):,} ranked total")
+    if len(filtered) > len(show):
+        filter_note += " · table capped at 400"
+    st.caption(filter_note)
+    st.download_button(
+        "Download visible queue (CSV)",
+        data=show.to_csv(index=False),
+        file_name="priority_queue.csv",
+        mime="text/csv",
+        key="queue_csv_download",
+        help="Download the currently visible, filtered queue with Estimated amount at risk values.",
+    )
     event = st.dataframe(
         show, hide_index=True, width="stretch",
         on_select="rerun", selection_mode="single-row", key="queue_grid",
         column_config={
             "Order value (₹)": st.column_config.NumberColumn(format="%.0f"),
-            "Risk": st.column_config.NumberColumn(format="%.3f"),
-            "Expected exposure (₹)": st.column_config.NumberColumn(format="%.0f"),
+            "Priority": st.column_config.ProgressColumn(min_value=0, max_value=1, format="%.2f"),
+            "Estimated amount at risk (₹)": st.column_config.NumberColumn(format="%.0f"),
         },
     )
-    st.caption("Queue is Estimated: order value × predicted risk. Observed leak value elsewhere is "
-               "verified. Select a row to open it in *Why this risk*.")
+    st.caption("Use this list to decide what to check first. Verified leak value is Observed; the amount at "
+               "risk is Estimated. Select a row to see the simple explanation.")
     try:
         sel = event.selection.rows
     except Exception:
         sel = []
-    return int(show.index[sel[0]]) if sel else None
+    return int(source_indices[sel[0]]) if sel else None
 
 
 # --------------------------------------------------------------------------- #
@@ -1055,7 +1306,7 @@ def render_queue(summary, scored: pd.DataFrame, seg: pd.DataFrame, dim: str,
 def render_why(res, scored: pd.DataFrame, record: pd.Series | None, over_time: pd.DataFrame,
                seg: pd.DataFrame, dim: str, evidence: list[dict], templates) -> None:
     if record is None or not len(scored):
-        note("Select a row in **Priority queue** to investigate it here.")
+        note("Select an order in **Where is the leak?** to see a simple explanation.")
         return
     head = (
         f'<div class="ll-dhead"><div>'
@@ -1066,28 +1317,31 @@ def render_why(res, scored: pd.DataFrame, record: pd.Series | None, over_time: p
         f'<div class="ll-dmeta">'
         f'<span class="ll-sev" style="color:{TIER_COLOR.get(record["tier"], MUTED)}">'
         f'{_dot(TIER_COLOR.get(record["tier"], MUTED), 7)}{_esc(record["tier"])}</span>'
-        f'<span>Risk <b>{_num(record["risk"], 3)}</b></span></div></div>'
+         f'<span>Priority <b>{_num(record["risk"], 2)}</b></span></div></div>'
     )
     st.markdown(head, unsafe_allow_html=True)
 
     left, right = st.columns([2, 1], gap="large")
     with left:
-        section("Exposure over time — observed vs estimated", "trend")
+        section("Money involved over time — verified vs estimated", "trend")
         chart_exposure_time(over_time)
-        section(f"Ranked drivers — estimated exposure by {dim.replace('_', ' ')}", "bars")
+        section(f"Similar orders — by {dim.replace('_', ' ')}", "bars")
         chart_segment_bars(seg, dim, "expected_exposure")
 
     with right:
-        section("Why this is flagged", "alert")
+        section("Why this order was marked", "alert")
         parts = [
-            ("Population", f"Scored among {len(scored):,} records; base adverse rate "
+            ("Compared with", f"Checked against {len(scored):,} orders; verified cancellation/return rate "
                            f"{_pct(scored.loc[scored['target_known'], 'observed_adverse'].mean())}."),
-            ("Model result", f"Predicted risk {_num(record['risk'], 3)} vs population mean "
-                             f"{_num(scored['risk'].mean(), 3)} (threshold {_num(res.threshold, 3)})."),
-            ("Comparison", f"Order value {format_inr(record['value'])}; expected exposure "
-                           f"{format_inr(record['expected_exposure'])} (Estimated)."),
-            ("Signal caveat", "The permutation test found no detectable signal, so risk ≈ the base "
-                              "rate for most records; the ranking is value-led."),
+            ("Why first", f"Priority {_num(record['risk'], 2)} vs typical {_num(scored['risk'].mean(), 2)} "
+                           f"(review limit {_num(res.threshold, 2)})."),
+            ("Money at stake", f"Order value {format_inr(record['value'])}; estimated amount at risk "
+                               f"{format_inr(record['expected_exposure'])} (Estimated)."),
+            ("Reliability note", ("The data check did not find a dependable pattern, so this list is led "
+                               "mostly by order value. Treat it as a review aid, not a guarantee."
+                               if not res.audit.get("usable") else
+                               "The data check found a useful pattern; use the priority score to decide "
+                               "what to review, not as proof of cause.")),
         ]
         st.markdown(
             '<div class="ll-parts">' + "".join(
@@ -1095,61 +1349,71 @@ def render_why(res, scored: pd.DataFrame, record: pd.Series | None, over_time: p
             unsafe_allow_html=True)
         if record.get("observed_adverse"):
             st.markdown(f'<div class="ll-meta-line">{_basis_badge("Observed")} This order is already '
-                        'verified as a leakage outcome.</div>', unsafe_allow_html=True)
+                        'verified as a cancellation or return.</div>', unsafe_allow_html=True)
         else:
             st.markdown(f'<div class="ll-meta-line">{_basis_badge("Estimated")} Outcome not yet '
-                        'verified — this is a forward exposure estimate.</div>', unsafe_allow_html=True)
+                        'verified — the amount at risk is estimated.</div>', unsafe_allow_html=True)
 
         if evidence:
-            with st.expander("Driver comparison vs population", expanded=True):
+            with st.expander("Compare this order with similar orders", expanded=True):
                 ev = pd.DataFrame(evidence).rename(columns={
-                    "driver": "Driver", "value": "Value", "segment_risk": "Segment risk",
-                    "population_risk": "Population risk", "segment_observed_rate": "Observed rate",
+                    "driver": "Group", "value": "Group value", "segment_risk": "Group priority",
+                    "population_risk": "Overall priority", "segment_observed_rate": "Verified problem rate",
                     "segment_records": "Records"})
                 st.dataframe(ev, width="stretch", hide_index=True)
 
-        section("Recommended actions", "check")
+        section("What you can do", "check")
         for t in templates[:2]:
             st.markdown(
                 f'<div class="ll-inset"><div class="ll-inset-t">{icon("check", color=ACCENT)}'
-                f'{_esc(t.leak_type)}</div><div class="ll-inset-b">{_esc(t.action)}</div>'
-                f'<div class="ll-inset-m">Owner: {_esc(t.owner)} · Validates with: '
-                f'{_esc(t.validation_metric)}</div></div>', unsafe_allow_html=True)
-        st.caption("Record an action in the *Action lab* tab to close the loop.")
+                f'{_esc(_business_action_copy(t.leak_type))}</div>'
+                f'<div class="ll-inset-b">{_esc(_business_action_copy(t.action))}</div>'
+                f'<div class="ll-inset-m">Owner: {_esc(t.owner)} · Check with: '
+                f'{_esc(_business_action_copy(t.validation_metric))}</div></div>', unsafe_allow_html=True)
+        st.caption("Record the chosen action in the *Action plan* tab.")
 
 
 # --------------------------------------------------------------------------- #
 # Screen 5 — Action lab
 # --------------------------------------------------------------------------- #
 def render_action_lab(templates, log_df: pd.DataFrame, default_scope: str,
-                      expected_exposure: float, baseline_value: str) -> dict | None:
-    section("Turn a leak into a measurable next step", "check")
-    st.caption("Pick a leak type, confirm the action, set an owner and a recovery assumption. "
-               "The recoverable figure is a scenario (Estimated), not a forecast.")
+                      expected_exposure: float, baseline_value: str,
+                      action_log_path=None, preferred_leak_type: str | None = None) -> dict | None:
+    section("Make a simple action plan", "check")
+    st.caption("Choose what to do, who owns it, when it is due, and how much of the amount at risk "
+               "you think the action could recover. The recovery amount is an Estimate, not a promise.")
+    baseline_display = (str(baseline_value)
+                        .replace("Estimated exposure", "Estimated amount at risk")
+                        .replace("base rate", "starting cancellation/return rate"))
 
     c1, c2 = st.columns([1, 1], gap="large")
     with c1:
-        tpl_labels = [f"{t.leak_type} — {t.action[:46]}…" for t in templates]
-        pick = st.selectbox("Action to take", range(len(templates)),
-                            format_func=lambda i: tpl_labels[i])
+        from .actions import default_due_date
+
+        tpl_labels = [f"{_business_action_copy(t.leak_type)} — "
+                      f"{_business_action_copy(t.action)[:46]}…" for t in templates]
+        preferred = next((i for i, t in enumerate(templates)
+                          if preferred_leak_type and t.leak_type.lower() == preferred_leak_type.lower()), 0)
+        pick = st.selectbox("Action to take", range(len(templates)), index=preferred,
+                            format_func=lambda i: tpl_labels[i], key="action_template_pick")
         t = templates[pick]
         owner = st.text_input("Owner", value=t.owner)
-        due = st.date_input("Due date")
+        due = st.date_input("Due date", value=pd.Timestamp(default_due_date(t.horizon_days)).date())
         scope = st.text_input("Scope", value=default_scope)
         status = st.selectbox("Status", ["Open", "In progress", "Done"])
     with c2:
-        recovery = st.slider("Assume we recover this share of exposure", 0, 100, 30, 5,
+        recovery = st.slider("How much could this action recover?", 0, 100, 30, 5,
                              format="%d%%")
         led = apply_recovery(expected_exposure, recovery / 100)
         kpi_row([
-            ("Estimated exposure", format_inr(led["expected_exposure"]), "Estimated"),
-            (f"Recoverable @ {recovery}%", format_inr(led["recoverable"]), "Estimated scenario"),
-            ("Validation metric", "see card", t.validation_metric[:38]),
+            ("Estimated amount at risk", format_inr(led["expected_exposure"]), "Estimated"),
+            (f"Could recover @ {recovery}%", format_inr(led["recoverable"]), "Estimate"),
+            ("How we’ll check", "see card", _business_action_copy(t.validation_metric)[:38]),
         ])
         st.markdown(
-            f'<div class="ll-inset"><div class="ll-inset-t">{icon("info", color=SUB)}Expected direction</div>'
-            f'<div class="ll-inset-b">{_esc(t.expected_direction)}</div>'
-            f'<div class="ll-inset-m">Baseline now: {_esc(baseline_value)}</div></div>',
+            f'<div class="ll-inset"><div class="ll-inset-t">{icon("info", color=SUB)}Expected change</div>'
+            f'<div class="ll-inset-b">{_esc(_business_action_copy(t.expected_direction))}</div>'
+            f'<div class="ll-inset-m">Baseline now: {_esc(baseline_display)}</div></div>',
             unsafe_allow_html=True)
         submit = st.button("Log this action", type="primary", width="stretch")
 
@@ -1160,8 +1424,44 @@ def render_action_lab(templates, log_df: pd.DataFrame, default_scope: str,
             "baseline_value": baseline_value, "due_date": str(due), "status": status,
         }
     if log_df is not None and len(log_df):
-        section("Action log", "layers")
-        st.dataframe(log_df.iloc[::-1], width="stretch", hide_index=True)
+        section("Saved actions", "layers")
+        display = log_df.iloc[::-1].copy()
+        visible = [c for c in ["action_id", "logged_at", "scope", "leak_type", "owner",
+                               "due_date", "status"] if c in display.columns]
+        st.dataframe(display[visible], width="stretch", hide_index=True)
+
+        if action_log_path is not None:
+            from .actions import ACTION_STATUSES, normalize_status, update_log_status
+
+            section("Update saved actions", "activity")
+            st.caption("Update an action without leaving the app. Status changes are written back to the local action log.")
+            for row_position, (_, row) in enumerate(log_df.iloc[::-1].head(8).iterrows()):
+                action_id = str(row.get("action_id", "")).strip()
+                if not action_id:
+                    continue
+                label = str(row.get("scope", "Action"))
+                owner_label = str(row.get("owner", "Unassigned"))
+                current = normalize_status(row.get("status", "Open"))
+                left, middle, right = st.columns([2.2, 1, .7], gap="small")
+                with left:
+                    st.markdown(
+                        f'<div class="ll-action-title">{_esc(label)}</div>'
+                        f'<div class="ll-action-meta">{_esc(owner_label)} · {_esc(str(row.get("due_date", "")))} · {_esc(action_id[:14])}</div>',
+                        unsafe_allow_html=True,
+                    )
+                with middle:
+                    new_status = st.selectbox("Status", ACTION_STATUSES,
+                                              index=ACTION_STATUSES.index(current)
+                                              if current in ACTION_STATUSES else 0,
+                                              key=f"action_status_{action_id}",
+                                              label_visibility="collapsed")
+                with right:
+                    if st.button("Save", key=f"save_action_{action_id}", width="stretch"):
+                        update_log_status(action_log_path, action_id, new_status)
+                        st.session_state["action_status_updated"] = True
+                        st.rerun()
+            if st.session_state.pop("action_status_updated", False):
+                st.success("Action status updated.")
     return None
 
 
@@ -1175,40 +1475,40 @@ def apply_recovery(expected_exposure: float, pct: float) -> dict:
 # --------------------------------------------------------------------------- #
 def render_measure(log_df: pd.DataFrame, summary, metrics: dict[str, Metric],
                    model, policy_text: str) -> None:
-    section("Validation loop — what changes after the action", "check")
+    section("Did the action help?", "check")
     if log_df is None or not len(log_df):
-        note("No actions logged yet. Log one in the *Action lab* to populate this screen.")
+        note("No actions logged yet. Add one in the *Action plan* tab to track the result.")
     else:
         from .actions import log_summary
         s = log_summary(log_df)
         kpi_row([
-            ("Actions logged", f"{s['total']:,}", "this workspace"),
-            ("Open", f"{s['open']:,}", "not yet done"),
-            ("Owners", f"{s['owners']:,}", "named"),
-            ("Leak types", f"{s['leak_types']:,}", "covered"),
+            ("Actions saved", f"{s['total']:,}", "this workspace"),
+            ("Still open", f"{s['open']:,}", "not yet done"),
+            ("People responsible", f"{s['owners']:,}", "named"),
+            ("Problems covered", f"{s['leak_types']:,}", "different warning types"),
         ])
         st.dataframe(log_df.iloc[::-1], width="stretch", hide_index=True)
 
-    section("Before / after plan", "activity")
+    section("Before and after", "activity")
     val = pd.DataFrame([
-        {"Metric": "Observed leak value (verified)", "Now": format_inr(summary.observed_leak_value),
-         "Target": "falls as flagged records are prevented or recovered"},
-        {"Metric": "Estimated exposure (forward)", "Now": format_inr(summary.expected_exposure),
-         "Target": "recomputed each period on the refreshed data"},
-        {"Metric": "Flagged adverse rate", "Now": _pct(summary.base_rate),
-         "Target": "adverse rate among worked records below the base rate"},
+        {"Metric": "Verified money lost", "Now": format_inr(summary.observed_leak_value),
+          "Target": "should fall after the fix"},
+        {"Metric": "Estimated money at risk", "Now": format_inr(summary.expected_exposure),
+          "Target": "should fall when the next file is loaded"},
+        {"Metric": "Cancellation and return rate", "Now": _pct(summary.base_rate),
+          "Target": "should be lower for the orders we worked on"},
         {"Metric": "Cancellation rate", "Now": (metrics.get('cancellation_rate').display
-                                                 if metrics.get('cancellation_rate') else "—"),
-         "Target": "down after payment/stock checks"},
+                                                  if metrics.get('cancellation_rate') else "—"),
+          "Target": "lower after payment and stock checks"},
         {"Metric": "Return rate (of fulfilled)", "Now": (metrics.get('return_rate').display
                                                           if metrics.get('return_rate') else "—"),
-         "Target": "down after product-quality audit"},
+          "Target": "lower after product-quality checks"},
     ])
     st.dataframe(val, width="stretch", hide_index=True)
-    st.caption("Re-run the same command next period; the app recomputes these from the refreshed "
-               "CSVs, so each action has a measurable before/after.")
+    st.caption("Load the next set of files later; the app will recalculate these numbers so you can see "
+               "whether the action helped.")
 
-    banner("warn", "Data-collection recommendation", policy_text)
+    banner("warn", "Data we still need", policy_text)
 
     with st.expander("Method & assumptions (Round 1 metrics retained)"):
         render_method(model, metrics)

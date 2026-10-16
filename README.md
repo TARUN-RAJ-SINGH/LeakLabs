@@ -1,4 +1,4 @@
-# 🔎 LeakLens — The Money Leak, Round 2
+# 🔎 LeakLabs — The Money Leak, Round 2
 
 A **manager decision system for revenue leakage**. It profiles the CSVs, builds a
 **leakage-safe feature table**, trains a model **from scratch in this project** on
@@ -26,8 +26,8 @@ or
 powershell -ExecutionPolicy Bypass -File .\run.ps1
 ```
 
-The app opens on <http://localhost:8501>. Click **Train model** in the sidebar (or
-on screen 2). Training runs locally in ~10 seconds and writes
+The app opens on <http://localhost:8501>. Open **Technical details (ML)** and click
+**Run analysis**. Training runs locally in ~10 seconds and writes
 `artifacts/leaklens_model.joblib` so the evaluation renders instantly on later
 visits. You can also **upload CSVs** and filter by a **date range**.
 
@@ -37,6 +37,7 @@ visits. You can also **upload CSVs** and filter by a **date range**.
 python selftest.py     # profile, mapping, joins, rules, feature table, training, queue, audit
 python test_app.py     # headless Streamlit AppTest: runs, trains, checks all six screens
 python test_edge.py    # missing fields, renamed columns, dup keys, nulls, tiny samples
+python test_actions.py # action IDs, local persistence, and safe status updates
 ```
 
 ---
@@ -45,12 +46,12 @@ python test_edge.py    # missing fields, renamed columns, dup keys, nulls, tiny 
 
 | # | Screen | What the manager sees |
 |---|---|---|
-| 1 | **Data trust** | Files + inferred roles, base grain, join health, field mapping, modelling eligibility (which rows have a *verified* outcome), and the exact pre-outcome feature list — with post-outcome fields excluded by design. |
-| 2 | **Train & evaluate** | Target, temporal split, baseline vs final hold-out metrics, PR curve, calibration, confusion matrix, permutation importance, and the **signal audit** that decides whether the model may be trusted. |
-| 3 | **Priority queue** | Verified rule signals, plus records ranked by **expected exposure** with tier, and ranked segment/driver exposure. Select a row to investigate. |
-| 4 | **Why this risk** | The two high-signal charts (exposure over time; ranked driver bars) beside a *Why this is flagged* panel (population, model result, comparison, signal caveat) and recommended actions. |
-| 5 | **Action lab** | Pick a leak→action template, owner, due date, and a recovery assumption; log it to `action_log.csv`. |
-| 6 | **Measure** | The action log and a before/after validation plan, plus a data-collection recommendation and the retained Round-1 method notes. |
+| 1 | **Dashboard** | A plain-language view of completed sales, money lost to returns/cancellations, low stock, and the top warning signs. |
+| 2 | **Where is the leak?** | Searchable order list showing where to look first, verified warnings, clear Observed/Estimated labels, and CSV export. |
+| 3 | **Check an order** | Simple explanation of why an order was marked and what a manager can do next. |
+| 4 | **Action plan** | Choose an owner, due date, action, and recovery estimate; save the action and update its status. |
+| 5 | **Measure results** | Before/after numbers and the next data needed to see whether the action helped. |
+| 6 | **Technical details (ML)** | Data checks, feature list, model training, hold-out results, calibration, and the signal audit for technical reviewers. |
 
 ---
 
@@ -136,6 +137,8 @@ resolves through the discovered mapping, so a renamed/missing column degrades to
 The Round-1 design system is unchanged: a limited slate/ink palette, system
 sans-serif stack, hairline dividers instead of cards, inline **SVG icons**, muted
 single-series charts, and INR with Indian digit grouping (e.g. `₹1,23,45,678`).
+The app now opens with a **Manager control room** that makes the trust → audit →
+prioritize → act path visible before the detailed screens.
 Press **`S`** to collapse/expand the sidebar (client-side, no rerun). Charts follow
 the PRD rule of **two high-signal charts in the active investigation** (screens 4);
 screen 2's curves are evaluation artefacts, not investigation charts.

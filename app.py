@@ -1,4 +1,4 @@
-"""LeakLens (The Money Leak - Round 2) — a manager decision system.
+"""LeakLabs (The Money Leak - Round 2) — a simple leak-to-action dashboard.
 
 Run with:  python -m streamlit run app.py
 
@@ -17,8 +17,7 @@ import pandas as pd
 import streamlit as st
 
 from leaklab import views
-from leaklab.actions import (ActionRecord, all_templates, append_log, default_due_date,
-                             load_log, templates_for)
+from leaklab.actions import ActionRecord, all_templates, append_log, load_log, templates_for
 from leaklab.data import (build_feature_table, build_model, base_grain_report)
 from leaklab.metrics import compute_metrics, format_inr
 from leaklab.profile import inspect_file, suggest_mapping
@@ -36,7 +35,7 @@ BUNDLED = ["customers.csv", "products.csv", "transactions.csv", "inventory.csv",
 
 _favicon = ASSETS / "favicon.png"
 st.set_page_config(
-    page_title="LeakLens",
+    page_title="LeakLabs",
     page_icon=str(_favicon) if _favicon.exists() else None,
     layout="wide",
     initial_sidebar_state="expanded",
@@ -124,7 +123,7 @@ else:
             mode_label = "Sample data (synthetic)"
 
 if not files:
-    st.title("LeakLens")
+    st.title("LeakLabs")
     st.warning("No data loaded. Select *Bundled dataset* or upload CSVs to begin.")
     st.stop()
 
@@ -160,17 +159,14 @@ ft = build_feature_table(model, mapping, files)
 grain = base_grain_report(model)
 
 # --------------------------------------------------------------------------- #
-# Model controls
+# Technical settings are rendered only inside the Technical details (ML) tab.
 # --------------------------------------------------------------------------- #
-st.sidebar.divider()
-st.sidebar.markdown("##### Model")
-capacity = st.sidebar.slider("Review capacity (% of orders flagged)", 2, 40, 10, 1,
-                             help="The manager can act on this share of orders; the threshold is "
-                                  "the matching quantile of predicted risk.") / 100.0
-final_kind = st.sidebar.selectbox(
-    "Final model", ["rf", "hgb"], index=0,
-    format_func=lambda k: {"rf": "Random Forest (final)",
-                           "hgb": "Histogram Gradient Boosting"}.get(k, k))
+if "ml_capacity" not in st.session_state:
+    st.session_state["ml_capacity"] = 10
+if "ml_final_kind" not in st.session_state:
+    st.session_state["ml_final_kind"] = "rf"
+capacity = float(st.session_state["ml_capacity"]) / 100.0
+final_kind = st.session_state["ml_final_kind"]
 
 # data + settings signature: changing any of these invalidates a loaded model
 sig = (round(len(ft), -1), round(float(ft["line_value"].sum()), -2),
@@ -179,7 +175,7 @@ sig = (round(len(ft), -1), round(float(ft["line_value"].sum()), -2),
 
 def _train_now() -> None:
     try:
-        with st.spinner("Training baseline + final model on the provided data…"):
+        with st.spinner("Checking the data and building the order list…"):
             res = train_model(ft, capacity=capacity, final_kind=final_kind,
                               artifact_path=str(ARTIFACT))
         st.session_state["res"] = res
@@ -203,18 +199,11 @@ if "res" not in st.session_state and ARTIFACT.exists():
         st.session_state["res_sig"] = sig
         st.session_state["payload"] = payload0
 
-train_clicked = st.sidebar.button("Train model", type="primary", width="stretch")
-st.sidebar.caption("Runs locally in-project. No external API or LLM is used as a predictor.")
-
 res = st.session_state.get("res")
 payload = st.session_state.get("payload")
 
-if train_clicked:
-    _train_now()
-    res = st.session_state.get("res")
-    payload = st.session_state.get("payload")
 if st.session_state.get("train_error"):
-    st.error(f"Model could not be trained: {st.session_state['train_error']}")
+    st.error(f"Detailed analysis could not run: {st.session_state['train_error']}")
 
 # --------------------------------------------------------------------------- #
 # Sidebar summary
@@ -224,10 +213,10 @@ unmatched = sum(j.unmatched_rows for j in model.join_health)
 st.sidebar.markdown(
     f'<div class="ll-kpi-l">Dataset</div>'
     f'<div class="ll-meta-line">{len(files)} files · {len(ft):,} rows · grain “{grain["grain"]}”</div>'
-    f'<div class="ll-meta-line">{int(ft["eligible"].sum()):,} labelled · {len(alerts)} rule leak(s) · '
+    f'<div class="ll-meta-line">{int(ft["eligible"].sum()):,} records with known outcomes · {len(alerts)} warning(s) · '
     f'{unmatched:,} unmatched join rows</div>'
-    f'<div class="ll-meta-line">Model: {"trained" if res else "not trained"}'
-    f'{"" if res else " — click Train model"}</div>'
+    f'<div class="ll-meta-line">Review list: {"ready" if res else "not ready"}'
+    f'{"" if res else " — open Technical details (ML)"}</div>'
     f'<div class="ll-hint">Press <kbd>S</kbd> to collapse or expand this panel.</div>',
     unsafe_allow_html=True,
 )
@@ -235,57 +224,67 @@ st.sidebar.markdown(
 # --------------------------------------------------------------------------- #
 # Header
 # --------------------------------------------------------------------------- #
-views.header("LeakLens",
-             "A leakage decision system: profile the data, train a model in-project, audit whether "
-             "it actually predicts, then prioritise a queue, explain it, act, and measure. ₹ (INR).",
+views.header("LeakLabs",
+             "Find where money is leaking, choose what to fix, and check whether the fix worked. ₹ (INR).",
              mode_label)
 if "Sample" in mode_label:
     st.warning("Running on synthetic sample data — results do not reflect the provided dataset.")
 
+# Build the queue once before rendering the screens so the first viewport can
+# show the same decision state as the tabs below. This makes the app feel like
+# a product: a manager sees the current recommendation immediately after
+# training instead of having to discover it by opening a tab.
+scored = None
+summary = None
+if res is not None and payload is not None:
+    scored = score_all(payload, ft, threshold=res.threshold)
+    summary = summarise(scored, res.threshold, res.threshold_info.get("capacity", capacity))
+    st.session_state["scored"] = scored
+    st.session_state["summary"] = summary
+
+views.render_command_center(
+    files=files,
+    mode_label=mode_label,
+    ft=ft,
+    res=res,
+    summary=summary,
+    alerts=alerts,
+    log_df=load_log(ACTION_LOG),
+)
+
 # --------------------------------------------------------------------------- #
 # Six screens
 # --------------------------------------------------------------------------- #
-tabs = st.tabs(["1 · Data trust", "2 · Train & evaluate", "3 · Priority queue",
-                "4 · Why this risk", "5 · Action lab", "6 · Measure"])
+tabs = st.tabs(["1 · Dashboard", "2 · Where is the leak?", "3 · Check an order",
+                "4 · Action plan", "5 · Measure results", "6 · Technical details (ML)"])
 
-# --- 1 Data trust -----------------------------------------------------------
+# --- 1 Dashboard ------------------------------------------------------------
 with tabs[0]:
-    views.render_data_trust(files, profiles, mapping, model, ft, res.specs if res else [], grain,
-                            mapping.warnings)
+    views.render_simple_dashboard(metrics, alerts, statuses, summary, res, load_log(ACTION_LOG))
 
-# --- 2 Train & evaluate -----------------------------------------------------
-with tabs[1]:
-    clicked = views.render_train(res, capacity=capacity, kind=final_kind)
-    if clicked and not train_clicked:
-        _train_now()
-        st.rerun()
-
-# --- 3 Priority queue -------------------------------------------------------
+# --- 2 Where is the leak? ---------------------------------------------------
 active_idx = None
-with tabs[2]:
+with tabs[1]:
     if res is None or payload is None:
-        views.banner("warn", "Model required",
-                     "Train the model in <b>2 · Train & evaluate</b> (or the sidebar) to build the "
-                     "priority queue.")
+        views.banner("warn", "Order review list not ready",
+                     "Open <b>Technical details (ML)</b> and choose <b>Run analysis</b> to build the "
+                     "list of orders to check first.")
     else:
-        scored = score_all(payload, ft, threshold=res.threshold)
-        st.session_state["scored"] = scored
-        summary = summarise(scored, res.threshold, res.threshold_info.get("capacity", capacity))
-        st.session_state["summary"] = summary
         dims = [d for d in ["category", "channel", "payment_method", "customer_segment", "region",
                             "preferred_channel"] if d in scored.columns]
-        dim = st.selectbox("Rank segments by driver", dims, index=0, key="queue_dim")
+        dim = st.selectbox("Group orders by", dims, index=0, key="queue_dim",
+                           format_func=lambda value: value.replace("_", " ").title())
         seg = segment_summary(scored, dim)
         sel = views.render_queue(summary, scored, seg, dim, alerts, statuses)
         if sel is not None:
             st.session_state["active_idx"] = sel
         active_idx = st.session_state.get("active_idx", 0)
 
-# --- 4 Why this risk --------------------------------------------------------
-with tabs[3]:
+# --- 3 Check an order -------------------------------------------------------
+with tabs[2]:
     scored = st.session_state.get("scored")
     if res is None or payload is None or scored is None:
-        views.note("Train the model and open the priority queue first.")
+        views.note("Run the checks in **Technical details (ML)**, then choose an order from **Where is the leak?**.")
     else:
         dim = st.session_state.get("queue_dim", "category")
         idx = int(st.session_state.get("active_idx", 0))
@@ -299,35 +298,71 @@ with tabs[3]:
             tpls = templates_for("Returns") + tpls
         views.render_why(res, scored, record, over_time, seg, dim, evidence, tpls)
 
-# --- 5 Action lab -----------------------------------------------------------
-with tabs[4]:
-    summary = st.session_state.get("summary")
+# --- 4 Action plan ----------------------------------------------------------
+with tabs[3]:
+    summary = st.session_state.get("summary") or summary
     exposure = float(summary.expected_exposure) if summary else 0.0
     baseline_value = format_inr(exposure)
     if res is not None:
-        baseline_value = f"Estimated exposure {format_inr(exposure)} at base rate {res.base_rate*100:.1f}%"
-    scope_default = "Priority queue — top exposure"
-    rec = views.render_action_lab(all_templates(), load_log(ACTION_LOG), scope_default,
-                                  exposure, baseline_value)
+        baseline_value = f"Estimated amount at risk {format_inr(exposure)} at starting problem rate {res.base_rate*100:.1f}%"
+    scope_default = "Top orders to check first"
+    preferred_leak = "Priority queue (model)"
+    if scored is not None and len(scored):
+        idx = int(st.session_state.get("active_idx", 0))
+        idx = min(max(idx, 0), len(scored) - 1)
+        focus = scored.iloc[idx]
+        focus_dim = st.session_state.get("queue_dim", "category")
+        scope_default = (f"{focus.get('record_id', 'Selected record')} · "
+                         f"{focus_dim.replace('_', ' ').title()}: {focus.get(focus_dim, '—')}")
+        if str(focus.get("status", "")).lower().startswith("return"):
+            preferred_leak = "Returns"
+        elif str(focus.get("status", "")).lower().startswith("cancel"):
+            preferred_leak = "Cancellations"
+    rec = views.render_action_lab(
+        all_templates(), load_log(ACTION_LOG), scope_default, exposure, baseline_value,
+        action_log_path=ACTION_LOG, preferred_leak_type=preferred_leak,
+    )
     if rec:
         append_log(ACTION_LOG, ActionRecord(**rec))
         st.session_state["action_logged"] = True
         st.rerun()
     if st.session_state.pop("action_logged", False):
-        st.success("Action logged. See *6 · Measure* for the validation plan.")
+        st.success("Action saved. See *Measure results* to track the change.")
 
-# --- 6 Measure --------------------------------------------------------------
-with tabs[5]:
+# --- 5 Measure results ------------------------------------------------------
+with tabs[4]:
     summary = st.session_state.get("summary")
     if summary is None and res is not None and payload is not None:
         scored = score_all(payload, ft, threshold=res.threshold)
         summary = summarise(scored, res.threshold, res.threshold_info.get("capacity", capacity))
-    policy = ("The provided data cannot support predictive prioritisation: the permutation test "
-              "found no signal. The highest-value next investment is <b>data collection</b> — capture "
-              "return reasons, payment authorisation outcomes, fulfilment timestamps, and promotion "
-              "exposure per order. Re-run this app on that richer data; the same pipeline will then "
-              "report whether the new fields actually predict leakage.")
+    if res is not None and res.audit.get("usable"):
+        policy = ("The detailed checks found a useful pattern, but they cannot prove why a problem happened. "
+                  "Run the same checks after each new file and compare the problem rate for worked orders "
+                  "with the overall starting rate.")
+    else:
+        policy = ("The current files cannot reliably tell us which orders will have a problem. The next "
+                  "best step is to collect return reasons, payment results, delivery times, and promotion "
+                  "details. Run the same checks again when those details are available.")
     if summary is None:
-        views.banner("warn", "Train the model first", "The validation plan appears once a model exists.")
+        views.banner("warn", "Review list not ready", "The results page appears after the order list is created.")
     else:
         views.render_measure(load_log(ACTION_LOG), summary, metrics, model, policy)
+
+# --- 6 Technical details (ML) ----------------------------------------------
+with tabs[5]:
+    tech_tabs = st.tabs(["ML check", "Data check"])
+    with tech_tabs[0]:
+        settings_left, settings_right = st.columns(2, gap="large")
+        with settings_left:
+            st.slider("How many orders can we check?", 2, 40,
+                      key="ml_capacity", help="Leave the default for the demo.")
+        with settings_right:
+            st.selectbox("Analysis method", ["rf", "hgb"], key="ml_final_kind",
+                         format_func=lambda k: {"rf": "Standard", "hgb": "Alternative"}.get(k, k))
+        clicked = views.render_train(res, capacity=capacity, kind=final_kind)
+        if clicked:
+            _train_now()
+            st.rerun()
+    with tech_tabs[1]:
+        views.render_data_trust(files, profiles, mapping, model, ft, res.specs if res else [], grain,
+                                mapping.warnings)

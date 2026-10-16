@@ -5,6 +5,8 @@ rather than crash (PRD section 9).
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 
 from leaklab.profile import inspect_file, suggest_mapping
@@ -12,8 +14,8 @@ from leaklab.data import build_model, build_feature_table, base_grain_report
 from leaklab.metrics import compute_metrics
 from leaklab.rules import run_all
 
-D = r"D:\DATATHON"
-BASE = {n: pd.read_csv(f"{D}/{n}.csv" if not n.endswith(".csv") else f"{D}/{n}")
+DATA_DIR = Path(__file__).resolve().parent
+BASE = {n: pd.read_csv(DATA_DIR / n)
         for n in ["customers.csv", "products.csv", "transactions.csv", "inventory.csv", "campaigns.csv"]}
 
 
