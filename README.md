@@ -1,4 +1,4 @@
-# 🔎 LeakLabs — The Money Leak, Round 2
+# 🔎 LeakLabs — The Money Leak
 
 A **manager decision system for revenue leakage**. It profiles the CSVs, builds a
 **leakage-safe feature table**, trains a model **from scratch in this project** on
