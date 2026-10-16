@@ -1,0 +1,213 @@
+
+The Money Leak Round 2 Maximum Score PRD
+Three hour hackathon build plan aligned to the judging rubric
+Build LeakLens, a manager decision system that finds revenue leakage, predicts or prioritizes at-risk records using a model trained by the team on the provided dataset, explains the evidence, and records a measurable next action. The product must not be a generic dashboard: every screen must support a business decision and every numerical claim must be traceable to verified fields.
+1 Winning product thesis
+Element
+Decision
+Target user
+Retail/business manager who needs to decide where to intervene before revenue is lost.
+Core job
+Find the highest-value leak, identify the most likely operational drivers, choose an action, and measure whether it worked.
+USP
+Leak-to-Action Loop: an explainable model ranks risk at the order/product level, then converts it into a prioritized, measurable manager playbook.
+High-score strategy
+Use the supplied data meaningfully, train an in-project model, compare it with a baseline, show evaluation, and make the result usable in a working product.
+
+2 Rubric to build mapping
+Rubric area
+What judges should see
+Build proof
+Problem and user need 10
+Specific manager pain: scattered transactions obscure cancellable/returnable/low-stock revenue.
+One-sentence user problem, decision flow, and expected operational action.
+Provided dataset usage 10
+Actual CSV profiling, safe joins, derived features, and data-driven drilldowns.
+Data health panel, mapping table, join match rates, product/customer/inventory breakdowns where verified.
+Data science quality 15
+Appropriate target, leakage-safe features, baseline, held-out evaluation, and limitations.
+Model card page: split, features, metrics, confusion matrix/PR curve, and explanation.
+Model from scratch 25
+A model trained during the project on the provided data, not an API/LLM result.
+Training button/log, saved artifact, reproducible code, prediction output, and results in UI.
+Working workflow 20
+Upload -> profile -> train -> prioritize -> investigate -> act -> validate.
+Live end-to-end demo with graceful unavailable states.
+USP and innovation 10
+Risk is connected to an intervention and validation plan, not merely a score.
+Action cards and recoverable-value scenario.
+Impact and responsibility 5
+Clear assumptions, uncertainty, and no fabricated profit claims.
+Observed versus estimated badges and limitations panel.
+Demo 5
+Two-minute narrative with a visible before/after decision path.
+Rehearsed script and a reliable sample-data fallback.
+
+3 Schema first data contract
+Before coding modeling logic, inspect every supplied CSV. Capture exact filenames, row counts, column names, types, null rate, date coverage, unique identifiers, category/status values, and five sample records. Choose only concepts proven by the files; never assume fields named order_id, revenue, price, cost, customer_id, or stock.
+Select a base grain: transaction, order line, daily SKU, or inventory snapshot. Report this grain beside every metric.
+Map verified keys and validate dimensions are unique before product/customer/campaign joins. Use left joins from the base table and show unmatched percent and row-count change.
+Normalize strings and parse dates with errors captured. Do not silently drop rows or duplicate transaction value during joins.
+Feature-gate every metric, rule, chart, and model. If required data is missing, show Unavailable with the reason.
+4 Model strategy choose after profiling
+Data condition
+Primary trained model
+Target and business output
+Evaluation
+Status identifies cancelled, returned, or refunded records
+Supervised classification: Logistic Regression as baseline; Random Forest or HistGradientBoosting as final.
+Target: 1 for at-risk status, 0 for eligible non-risk records. Output: probability and risk tier.
+Temporal holdout if dates work; otherwise stratified holdout. Compare precision, recall, F1, PR-AUC and confusion matrix.
+No reliable status label, but dated transaction measures exist
+Unsupervised Isolation Forest trained on supplied data.
+Outlier score for unusual product/day/region behavior; output: priority tier, not probability.
+Show contamination assumption, top anomalies, and a simple prior-window threshold baseline.
+Only sparse/categorical records
+Do not force ML. Use transparent rules and improve workflow.
+Alert score from observed rates and impact.
+Compare to simple threshold rule and disclose ML is not eligible.
+
+Preferred path for maximum points: a supervised model trained on the supplied data, if verified status labels exist. This is a model built and fitted by the team on hackathon data. Do not use an LLM/API as the predictor. A pretrained model, embeddings, or API-only scoring should not be presented as the core model.
+Recommended model for this hackathon
+Use Logistic Regression as the required baseline and Random Forest Classifier as the recommended final model. Random Forest is the best practical choice for this project because it trains quickly on a normal CPU, handles nonlinear patterns and mixed numeric/categorical business features after encoding, needs little tuning, and provides understandable feature importance. It does not require the RTX 2050 GPU or CUDA. Limit the first demo model to roughly 100 to 200 trees, fixed random seed, and class weighting only if the risk class is rare. Use HistGradientBoosting only as an optional comparison if Random Forest is already working; do not spend hackathon time on GPU or deep-learning setup.
+5 Leakage safe modeling specification
+Step
+Requirement
+Target definition
+Use only an inspected status/outcome field. Define eligible population and positive labels explicitly, e.g. returned/cancelled/refunded values found in data. Exclude unknown/ambiguous statuses.
+Feature eligibility
+Use information available before the target outcome: product/category, region/customer segment, quantity, order weekday/month, verified discount ratio, prior product rate, inventory state only if time-aligned.
+Leakage exclusion
+Never use post-outcome status, refund amount, return reason recorded after return, or final realised revenue as a predictor of the return/cancel label.
+Split
+Prefer train on earlier dates and test on later dates. If no viable dates, use stratified train/test split with fixed random seed. Never evaluate on training data.
+Pipeline
+Impute missing numeric values from train set; one-hot encode categorical values; fit transforms on train only; use a pipeline to avoid leakage.
+Baseline
+Majority-class prediction plus a simple business rule. The final model must improve a relevant metric or be retained only as an honest experimental result.
+Threshold
+Choose a probability threshold using validation data and business objective, e.g. prioritize precision for costly interventions or recall for expensive missed returns. State the choice.
+
+6 Features and metric definitions
+Feature or metric
+Formula/use
+Guardrail
+At-risk label
+Verified risk status mapped to 1; eligible non-risk status mapped to 0.
+Status mapping shown in model card.
+Risk probability
+Final supervised-model predicted probability for a record.
+Only show if a calibrated/usable supervised model is trained.
+Risk tier
+High/medium/low based on chosen threshold(s).
+Show threshold and counts; avoid claiming certainty.
+Observed leak value
+Sum of verified source monetary values for records with observed bad outcomes.
+Avoid double-counting status and refund fields.
+Expected exposure
+Sum of verified order value times model risk probability.
+Label Estimated; use only compatible record-level monetary field.
+Recoverable scenario
+Expected exposure times a user-visible recovery percentage.
+Scenario, not forecast; separate from observed revenue/profit.
+Feature importance
+Permutation importance or model coefficient magnitude; optionally local explanation for one selected record.
+Describe association, not cause.
+
+Never manufacture costs/list prices to claim actual margin. Independently generated values may be used only in a clearly labelled scenario with formula and assumptions, not mixed into observed KPIs.
+7 Product experience
+Screen
+User sees
+Decision made
+Data trust
+Uploaded files, mappings, base grain, join health, model eligibility and warnings.
+Can the analysis be trusted?
+Train and evaluate
+Chosen target, split, feature list, baseline vs final metrics, confusion matrix and limitations.
+Is the model ready to use?
+Priority queue
+Top risk products/orders/segments sorted by expected exposure; observed/estimated badges.
+Where should attention go first?
+Why this risk
+Selected segment trend, driver breakdown, rule/model explanation, evidence caveats.
+What should be checked?
+Action lab
+2-3 actions mapped to leak type, owner, due date, expected direction and validation metric.
+What should the manager do next?
+Measure
+Session/local action log and before-after metric plan.
+Did the intervention help?
+
+Build in Streamlit with a sidebar for file upload, mappings, train button, date range, and filters. Main content follows the six-screen story as tabs or a guided flow.
+Use only two high-signal charts in the active investigation: risk/exposure over time and ranked driver/segment bars. No empty or decorative charts.
+Place a visible “Why this is flagged” panel beside recommendations: population, rule/model result, comparison, evidence, and limitations.
+Persist model/artifacts locally for the demo only. A local CSV or session-state action log is enough for Round 2.
+8 Delivery architecture
+Module
+Responsibility
+profile
+Schema inspector, mapping suggestions, field eligibility, null/unique/date reports.
+data
+Safe joins, base-grain checks, time alignment, canonical feature table.
+train
+Train/test split, preprocessing pipeline, baseline/final model fit, metrics, artifact save/load.
+score
+Prediction, tiering, expected exposure, aggregation, feature importance.
+rules
+Transparent fallback alerts for non-model paths.
+actions
+Leak-to-action library and local action/validation log.
+views
+Streamlit components; display metadata returned by data/model functions.
+
+9 Acceptance criteria
+The app runs locally from a documented command and supports inspected CSVs without hard-coded column assumptions.
+The data trust panel shows mappings, base grain, selected files, join health, and warnings.
+If labels are eligible, a model is trained on the supplied data during the demo and its artifact/metrics are produced reproducibly.
+A baseline and held-out evaluation are visible, with the selected decision threshold and reason.
+The model is protected from obvious target leakage and uses only documented eligible features.
+The priority queue leads to a segment/order/product investigation with transparent explanations and an action card.
+All inferred financial values are labelled Estimated; unsupported concepts are unavailable, not fabricated.
+A two-minute demo can move from raw data to manager action and validation metric without leaving the app.
+10 Three hour plan for two participants
+Time
+Participant A data science
+Participant B product and UX
+Joint checkpoint
+0:00-0:20
+Profile files; test label feasibility and target mapping.
+Lock demo narrative; build Streamlit shell/data trust view.
+Select supervised or fallback path.
+0:20-0:55
+Build feature table, safe split, Logistic Regression baseline, and Random Forest final model.
+Build upload/mapping state and priority queue layout.
+Train one model end-to-end.
+0:55-1:25
+Add metrics, confusion matrix, importance, score/exposure aggregation.
+Build model card and investigate/why-flagged views.
+Baseline vs model visible.
+1:25-1:55
+Test leakage, missing fields, class imbalance, and time split.
+Build action lab and validation log; wire action cards to leak type.
+Full decision path works.
+1:55-2:20
+Tune threshold/one parameter only; save artifact and test reload.
+Polish labels, badges, errors, and sample demo path.
+Reliability pass.
+2:20-2:40
+Prepare technical explanation and limitations.
+Prepare two-minute presentation and visual flow.
+Rehearse together.
+2:40-3:00
+Support fixes only.
+Support fixes only.
+Final demo rehearsal.
+
+11 Presentation script
+“Managers do not need another sales chart; they need to know which leak to act on first. We first profile the provided data and show the analysis boundaries. We train our own model on the verified outcome field and compare it with a baseline on held-out data. The model prioritizes this segment because its expected exposure is highest. These breakdowns are evidence of likely drivers, not claimed causes. The manager selects this action, and we record the metric that will validate whether it worked. This closes the loop from data to accountable action.”
+12 Out of scope and responsible claims
+No LLM/API is used as the core predictive model. Generative AI, if used at all, may only assist non-decision copy and must not affect model scores.
+No production deployment, authentication, live integrations, causal guarantees, automated pricing, or automated replenishment.
+No claim that the model prevents a cancellation/return; it prioritizes records or segments for review.
+No full profit/margin statements unless compatible source cost and realized-price fields are verified.
+No model if the provided data cannot support a target or adequate evaluation; show transparent rules and explain the limitation.
