@@ -31,6 +31,22 @@ The app opens on <http://localhost:8501>. Open **Technical details (ML)** and cl
 `artifacts/leaklens_model.joblib` so the evaluation renders instantly on later
 visits. You can also **upload CSVs** and filter by a **date range**.
 
+## Product screenshots
+
+### Plain-language dashboard
+
+The first screen answers the business question directly: where is money leaking,
+how much is involved, and what should the manager do next?
+
+![LeakLabs dashboard showing verified leak cards and next actions](assets/leaklabs-dashboard.png)
+
+### Order review list
+
+Managers can search and filter the orders that need attention first, then open a
+simple explanation for any selected order.
+
+![LeakLabs order review list with filters and estimated amount at risk](assets/leaklabs-order-review.png)
+
 ### Tests (no UI needed)
 
 ```powershell
