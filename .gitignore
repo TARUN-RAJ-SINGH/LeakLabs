@@ -1,0 +1,37 @@
+# Local AI/tool workspace and pasted chat attachments
+.opencode/
+
+# Python generated files
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Generated model files and local demo logs
+artifacts/*.joblib
+artifacts/*.pkl
+artifacts/*.pickle
+action_log.csv
+
+# Logs, temporary files, and local exports
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+priority_queue.csv
+
+# Local IDE and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
